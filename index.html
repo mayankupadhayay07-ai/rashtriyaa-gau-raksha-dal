@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html lang="hi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>राष्ट्रीय गौ रक्षा दल</title>
+    <link href="https://fonts.googleapis.com/css2?family=Yatra+One&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Yatra One', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+            color: #333;
+            direction: rtl; /* For Hindi text alignment */
+            text-align: right;
+        }
+        header {
+            background-color: #ff9933;
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+        nav {
+            background-color: #138808;
+            padding: 10px;
+            text-align: center;
+        }
+        nav a {
+            color: white;
+            margin: 0 15px;
+            text-decoration: none;
+            font-size: 18px;
+        }
+        section {
+            padding: 20px;
+            margin: 20px;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h2 {
+            color: #ff9933;
+        }
+        .gallery img {
+            width: 200px;
+            height: auto;
+            margin: 10px;
+        }
+        .edit-btn {
+            display: none;
+            background-color: #138808;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        .admin-form {
+            display: none;
+        }
+        #admin-login {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            display: none;
+            justify-content: center;
+            align-items: center;
+        }
+        #admin-login form {
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .id-card-template {
+            border: 2px solid #ff9933;
+            width: 300px;
+            padding: 20px;
+            margin: 20px;
+            background-color: #fff;
+            text-align: center;
+        }
+        .id-card-template img {
+            width: 100px;
+            height: 100px;
+            border-radius: 50%;
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>राष्ट्रीय गौ रक्षा दल</h1>
+    <button onclick="showAdminLogin()">एडमिन लॉगिन</button>
+</header>
+
+<nav>
+    <a href="#works">हमारे कार्य</a>
+    <a href="#workers">हमारे कार्यकर्ता</a>
+    <a href="#main-persons">संघ के मुख्य व्यक्ति</a>
+    <a href="#gallery">गैलरी</a>
+</nav>
+
+<section id="works">
+    <h2>हमारे कार्य</h2>
+    <ul id="works-list"></ul>
+    <button class="edit-btn" onclick="editSection('works')">संपादित करें</button>
+    <div class="admin-form" id="works-form">
+        <textarea id="works-text" rows="5" cols="50"></textarea><br>
+        <button onclick="saveSection('works')">सहेजें</button>
+    </div>
+</section>
+
+<section id="workers">
+    <h2>हमारे कार्यकर्ता</h2>
+    <div id="workers-list"></div>
+    <button class="edit-btn" onclick="editWorkers()">कार्यकर्ता संपादित करें</button>
+    <div class="admin-form" id="workers-form">
+        <h3>नया कार्यकर्ता जोड़ें</h3>
+        <input type="text" id="worker-name" placeholder="नाम"><br>
+        <input type="text" id="worker-role" placeholder="भूमिका"><br>
+        <input type="file" id="worker-photo" accept="image/*"><br>
+        <button onclick="addWorker()">जोड़ें</button>
+        <h3>मौजूदा कार्यकर्ता</h3>
+        <ul id="existing-workers"></ul>
+    </div>
+    <button class="edit-btn" onclick="showIdCardForm()">आईडी कार्ड बनाएं</button>
+    <div class="admin-form" id="id-card-form">
+        <h3>आईडी कार्ड बनाएं</h3>
+        <select id="worker-select"></select><br>
+        <button onclick="generateIdCard()">जनरेट करें</button>
+    </div>
+    <div id="id-card-preview"></div>
+</section>
+
+<section id="main-persons">
+    <h2>संघ के मुख्य व्यक्ति</h2>
+    <ul id="main-persons-list"></ul>
+    <button class="edit-btn" onclick="editSection('main-persons')">संपादित करें</button>
+    <div class="admin-form" id="main-persons-form">
+        <textarea id="main-persons-text" rows="5" cols="50"></textarea><br>
+        <button onclick="saveSection('main-persons')">सहेजें</button>
+    </div>
+</section>
+
+<section id="gallery">
+    <h2>गैलरी</h2>
+    <div class="gallery" id="gallery-images"></div>
+    <button class="edit-btn" onclick="editGallery()">गैलरी संपादित करें</button>
+    <div class="admin-form" id="gallery-form">
+        <input type="file" id="gallery-photo" accept="image/*" multiple><br>
+        <button onclick="addGalleryImages()">जोड़ें</button>
+    </div>
+</section>
+
+<div id="admin-login">
+    <form>
+        <label for="admin-password">पासवर्ड:</label>
+        <input type="password" id="admin-password"><br>
+        <button type="button" onclick="adminLogin()">लॉगिन</button>
+        <button type="button" onclick="hideAdminLogin()">रद्द करें</button>
+    </form>
+</div>
+
+<script>
+    const ADMIN_PASSWORD = 'admin123'; // Hardcoded for simplicity
+    let isAdmin = false;
+    const data = {
+        works: ['गौ रक्षा अभियान', 'जागरूकता कार्यक्रम'],
+        mainPersons: ['अध्यक्ष: राम कुमार', 'उपाध्यक्ष: श्याम लाल'],
+        workers: [], // {name, role, photo: base64}
+        gallery: [] // base64 images
+    };
+
+    function loadData() {
+        const savedData = localStorage.getItem('websiteData');
+        if (savedData) {
+            Object.assign(data, JSON.parse(savedData));
+        }
+        renderSections();
+    }
+
+    function saveData() {
+        localStorage.setItem('websiteData', JSON.stringify(data));
+        renderSections();
+    }
+
+    function renderSections() {
+        // Works
+        const worksList = document.getElementById('works-list');
+        worksList.innerHTML = '';
+        data.works.forEach(work => {
+            const li = document.createElement('li');
+            li.textContent = work;
+            worksList.appendChild(li);
+        });
+
+        // Main Persons
+        const mainPersonsList = document.getElementById('main-persons-list');
+        mainPersonsList.innerHTML = '';
+        data.mainPersons.forEach(person => {
+            const li = document.createElement('li');
+            li.textContent = person;
+            mainPersonsList.appendChild(li);
+        });
+
+        // Workers
+        const workersList = document.getElementById('workers-list');
+        workersList.innerHTML = '';
+        data.workers.forEach(worker => {
+            const div = document.createElement('div');
+            div.innerHTML = `<strong>${worker.name}</strong> - ${worker.role}<br><img src="${worker.photo}" width="100">`;
+            workersList.appendChild(div);
+        });
+
+        // Gallery
+        const galleryDiv = document.getElementById('gallery-images');
+        galleryDiv.innerHTML = '';
+        data.gallery.forEach(imgSrc => {
+            const img = document.createElement('img');
+            img.src = imgSrc;
+            galleryDiv.appendChild(img);
+        });
+
+        // Worker select for ID card
+        const workerSelect = document.getElementById('worker-select');
+        workerSelect.innerHTML = '';
+        data.workers.forEach((worker, index) => {
+            const option = document.createElement('option');
+            option.value = index;
+            option.textContent = worker.name;
+            workerSelect.appendChild(option);
+        });
+    }
+
+    function showAdminLogin() {
+        document.getElementById('admin-login').style.display = 'flex';
+    }
+
+    function hideAdminLogin() {
+        document.getElementById('admin-login').style.display = 'none';
+    }
+
+    function adminLogin() {
+        const password = document.getElementById('admin-password').value;
+        if (password === ADMIN_PASSWORD) {
+            isAdmin = true;
+            hideAdminLogin();
+            document.querySelectorAll('.edit-btn').forEach(btn => btn.style.display = 'block');
+            alert('एडमिन लॉगिन सफल!');
+        } else {
+            alert('गलत पासवर्ड!');
+        }
+    }
+
+    function editSection(section) {
+        if (!isAdmin) return;
+        const textArea = document.getElementById(`${section}-text`);
+        const form = document.getElementById(`${section}-form`);
+        textArea.value = data[section.replace('-', '')].join('\n');
+        form.style.display = 'block';
+    }
+
+    function saveSection(section) {
+        if (!isAdmin) return;
+        const textArea = document.getElementById(`${section}-text`);
+        data[section.replace('-', '')] = textArea.value.split('\n').filter(line => line.trim() !== '');
+        saveData();
+        document.getElementById(`${section}-form`).style.display = 'none';
+    }
+
+    function editWorkers() {
+        if (!isAdmin) return;
+        const form = document.getElementById('workers-form');
+        form.style.display = 'block';
+        const existingList = document.getElementById('existing-workers');
+        existingList.innerHTML = '';
+        data.workers.forEach((worker, index) => {
+            const li = document.createElement('li');
+            li.textContent = worker.name;
+            const delBtn = document.createElement('button');
+            delBtn.textContent = 'हटाएं';
+            delBtn.onclick = () => removeWorker(index);
+            li.appendChild(delBtn);
+            existingList.appendChild(li);
+        });
+    }
+
+    function addWorker() {
+        if (!isAdmin) return;
+        const name = document.getElementById('worker-name').value;
+        const role = document.getElementById('worker-role').value;
+        const file = document.getElementById('worker-photo').files[0];
+        if (name && role && file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                data.workers.push({name, role, photo: e.target.result});
+                saveData();
+                editWorkers(); // Refresh list
+            };
+            reader.readAsDataURL(file);
+        } else {
+            alert('सभी फ़ील्ड भरें!');
+        }
+    }
+
+    function removeWorker(index) {
+        data.workers.splice(index, 1);
+        saveData();
+        editWorkers();
+    }
+
+    function editGallery() {
+        if (!isAdmin) return;
+        document.getElementById('gallery-form').style.display = 'block';
+    }
+
+    function addGalleryImages() {
+        if (!isAdmin) return;
+        const files = document.getElementById('gallery-photo').files;
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                data.gallery.push(e.target.result);
+                saveData();
+            };
+            reader.readAsDataURL(file);
+        });
+    }
+
+    function showIdCardForm() {
+        if (!isAdmin) return;
+        document.getElementById('id-card-form').style.display = 'block';
+    }
+
+    function generateIdCard() {
+        const index = document.getElementById('worker-select').value;
+        const worker = data.workers[index];
+        const preview = document.getElementById('id-card-preview');
+        preview.innerHTML = `
+            <div class="id-card-template">
+                <h3>राष्ट्रीय गौ रक्षा दल</h3>
+                <img src="${worker.photo}" alt="फोटो">
+                <p><strong>नाम:</strong> ${worker.name}</p>
+                <p><strong>भूमिका:</strong> ${worker.role}</p>
+                <p><strong>आईडी:</strong> RGRD-${index + 1}</p>
+            </div>
+        `;
+    }
+
+    // Initial load
+    loadData();
+</script>
+
+</body>
+</html>
